@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class Polygon(ABC):
+class Instruction(ABC):
     
     @abstractmethod
     def execute(self):
