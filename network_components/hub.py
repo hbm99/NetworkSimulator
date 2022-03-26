@@ -1,4 +1,4 @@
-from port import Port
+from network_components.port import Port
 
 
 class Hub:

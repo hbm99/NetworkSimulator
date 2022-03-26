@@ -21,8 +21,7 @@ instructions.sort(key = instruction_time)
 while len(instructions) > 0:
     #elapsed_seconds = time.time() - start
     #elapsed_milliseconds = elapsed_seconds * 1000
-    if instructions[0][0] <= time.time() - start: #time to take instruction <= elapsed_seconds
+    if instructions[0][0] <= time.time() - start: #time to take instruction <= elapsed seconds
         #parse/execute instruction
         instructions.pop(0)
-    
-    
+
