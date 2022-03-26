@@ -4,12 +4,10 @@ start = time.time()
 
 instructions = []
 with open('script.txt') as script:
-    line = script.readline()
-    splitted_line = line.split()
-    splitted_line[0] = int(splitted_line[0])
-    instructions.append(splitted_line)
-    while line:
+    while True:
         line = script.readline()
+        if not(line):
+            break
         splitted_line = line.split()
         splitted_line[0] = int(splitted_line[0])
         instructions.append(splitted_line)
@@ -20,9 +18,11 @@ def instruction_time(element):
 instructions.sort(key = instruction_time)
 
 #se tiene lista de instrucciones ordenada por <time> en instructions
-while True:
-    
-    elapsed_seconds = time.time() - start
-    elapsed_milliseconds = elapsed_seconds * 1000
+while len(instructions) > 0:
+    #elapsed_seconds = time.time() - start
+    #elapsed_milliseconds = elapsed_seconds * 1000
+    if instructions[0][0] <= time.time() - start: #time to take instruction <= elapsed_seconds
+        #parse/execute instruction
+        instructions.pop(0)
     
     
