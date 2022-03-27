@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from main import computers, hubs
+from simulator import computers, hubs
 
 class Instruction(ABC):
     

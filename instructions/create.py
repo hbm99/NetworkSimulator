@@ -1,5 +1,5 @@
 from instructions.instruction import Instruction
-from main import computers, hubs
+from simulator import computers, hubs
 from network_components.computer.computer import Computer
 from network_components.hub import Hub
 
