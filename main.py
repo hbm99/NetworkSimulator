@@ -1,5 +1,8 @@
 import time
 
+computers = []
+hubs = []
+
 start = time.time()
 
 instructions = []
@@ -16,12 +19,13 @@ def instruction_time(element):
     return element[0]
 
 instructions.sort(key = instruction_time)
-
 #se tiene lista de instrucciones ordenada por <time> en instructions
+
 while len(instructions) > 0:
-    #elapsed_seconds = time.time() - start
-    #elapsed_milliseconds = elapsed_seconds * 1000
-    if instructions[0][0] <= time.time() - start: #time to take instruction <= elapsed seconds
+    
+    if instructions[0][0] <= time.time() - start: #time to take instruction <= elapsed seconds #elapsed_seconds = time.time() - start #elapsed_milliseconds = elapsed_seconds * 1000
         #parse/execute instruction
         instructions.pop(0)
+
+        
 
