@@ -4,5 +4,5 @@ from network_components.port import Port
 
 class Computer(Device):
     def __init__(self, name):
-        self.name = name
+        super().__init__(name)
         self.ports = [Port(name + "_" + str(1), self)]

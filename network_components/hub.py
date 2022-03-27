@@ -4,7 +4,7 @@ from network_components.port import Port
 
 class Hub(Device):
     def __init__(self, name, ports_count):
-        self.name = name
+        super().__init__(name)
         self.ports = self.create_ports(self, name, int(ports_count))
     
     def create_ports(self, name, ports_count):
