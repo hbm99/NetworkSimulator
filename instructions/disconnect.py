@@ -3,8 +3,8 @@ from instructions.instruction import Instruction
 
 class Disconnect(Instruction):
     
-    def execute(self, args):
-        port = self.find_port(args[2])
+    def execute(self, simulator, args):
+        port = simulator.find_port(args[2])
         cable = port.cable
         if cable.port_1.name == port.name:
             cable.port_1 = None

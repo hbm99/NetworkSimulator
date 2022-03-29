@@ -8,10 +8,10 @@ class Device(ABC):
         self.name = name
         self.txt = self.create_txt(self.name)
         
-    def create_txt(name : str):
+    def create_txt(self, name : str):
         open(name + '.txt', 'w')
     
     
-    def write(time : int, port : Port, operation : str, data : str, operation_status : str):
+    def write(self, time : int, port : Port, operation : str, data : str, operation_status : str):
         with open(port.device.name + '.txt', 'a') as f:
             f.write(str(time) + " " + port.name + " " + operation + " " + data + " " + operation_status + "\n")

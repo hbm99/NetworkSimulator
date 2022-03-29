@@ -2,11 +2,10 @@ from time import time
 from instructions.instruction import Instruction
 from network_components.cable import Cable
 from network_components.port import Port
-from main import simulator
 
 class Send(Instruction):
     
-    def execute(self, args):
+    def execute(self, simulator, args):
         computer = args[2]
         data = args[3]
         for i in range(len(data)):
