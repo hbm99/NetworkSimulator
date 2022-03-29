@@ -8,9 +8,7 @@ class Create(Instruction):
     def execute(self, simulator, args):
         if args[2] == "hub":
             hub = Hub(args[3], args[4])
-            # simulator.add_device(hub)
-            simulator.hubs.append(hub)
+            simulator.hubs[args[3]] = hub
         elif args[2] == "host":
             computer = Computer(args[3])
-            # simulator.add_device(computer)
-            simulator.computers.append(computer)
+            simulator.computers[args[3]] = computer
