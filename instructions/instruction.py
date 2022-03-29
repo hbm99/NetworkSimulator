@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from simulator import computers, hubs
+from main import simulator
 
 class Instruction(ABC):
     
@@ -8,13 +8,13 @@ class Instruction(ABC):
         pass
     
     def find_port(name : str):
-        for i in range(len(computers)):
-            if computers[i].port.name == name:
-                return computers[i].port
-        for i in range(len(hubs)):
+        for i in range(len(simulator.computers)):
+            if simulator.computers[i].port.name == name:
+                return simulator.computers[i].port
+        for i in range(len(simulator.hubs)):
             splitted_name = name.split('_')
-            if splitted_name[0] == hubs[i].name:
-                for j in range(len(hubs[i].ports)):
-                    if hubs[i].ports[j].name == splitted_name[1]:
-                        return hubs[i].ports[j]
+            if splitted_name[0] == simulator.hubs[i].name:
+                for j in range(len(simulator.hubs[i].ports)):
+                    if simulator.hubs[i].ports[j].name == splitted_name[1]:
+                        return simulator.hubs[i].ports[j]
  

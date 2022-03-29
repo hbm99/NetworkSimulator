@@ -15,6 +15,7 @@ class Simulator:
         self.read_script()
         self.instructions.sort(key = self.instruction_time)
         #se tiene lista de instrucciones ordenada por <time> en instructions
+        self.signal_time = 10
         
     def instruction_time(element):
         return element[0]
@@ -28,9 +29,6 @@ class Simulator:
                 splitted_line = line.split()
                 splitted_line[0] = int(splitted_line[0])
                 self.instructions.append(splitted_line)
-                
-    def start_time(self):
-        return self.start
                 
     def execute(self):
         while len(self.instructions) > 0:
