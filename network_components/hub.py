@@ -10,5 +10,5 @@ class Hub(Device):
     def create_ports(self, name, ports_count):
         ports = []
         for i in range(ports_count):
-            ports.append(Port(name + "_" + str(i), self))
+            ports.append(Port(name + "_" + str(i + 1), self))
         return ports

@@ -33,13 +33,13 @@ class Simulator:
 
     def find_port(self, name : str):
         for i in range(len(self.computers)):
-            if self.computers[i].port.name == name:
-                return self.computers[i].port
+            if self.computers[i].ports[0].name == name:
+                return self.computers[i].ports[0]
         for i in range(len(self.hubs)):
             splitted_name = name.split('_')
             if splitted_name[0] == self.hubs[i].name:
                 for j in range(len(self.hubs[i].ports)):
-                    if self.hubs[i].ports[j].name == splitted_name[1]:
+                    if self.hubs[i].ports[j].name == name:
                         return self.hubs[i].ports[j]
     
     # def add_device(self, device : Device):

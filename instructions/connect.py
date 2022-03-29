@@ -8,7 +8,8 @@ class Connect(Instruction):
         port_1 = simulator.find_port(args[2])
         port_2 = simulator.find_port(args[3])
         wire = Cable(Data(None), port_1, port_2)
-        port_1.cable, port_2.cable = wire
+        port_1.cable = wire
+        port_2.cable = wire
         
     
         
