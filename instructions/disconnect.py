@@ -5,11 +5,13 @@ class Disconnect(Instruction):
     
     def execute(self, simulator, args):
         port = simulator.find_port(args[2])
-        cable = port.cable
-        if cable.port_1.name == port.name:
-            cable.port_1 = None
+        duplex_cable = port.cable
+        if duplex_cable.cable_1.port_1.name == port.name:
+            duplex_cable.cable_1.port_1 = None
+            duplex_cable.cable_2.port_2 = None
         else : 
-            cable.port_2 = None
+            duplex_cable.cable_1.port_2 = None
+            duplex_cable.cable_2.port_1 = None
         port.cable = None
         
         

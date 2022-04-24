@@ -21,7 +21,6 @@ class Simulator:
         self.read_script()
         self.instructions = sorted(self.instructions, key = itemgetter(0))
         #se tiene lista de instrucciones ordenada por <time> en instructions
-        self.signal_time = 10
     
     def read_script(self):
         with open('script.txt') as script:

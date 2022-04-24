@@ -1,6 +1,6 @@
 from time import time, sleep
 from instructions.instruction import Instruction
-from network_components.cable import Cable
+from network_components.cable import DuplexCable
 from network_components.port import Port
 
 class Send(Instruction):
@@ -16,9 +16,17 @@ class Send(Instruction):
                 current_port.device.write(int(time() - simulator.start), current_port, "send", data[i], "ok")
                 if current_port.cable == None:
                     continue
-                current_cable : Cable = current_port.cable
+                current_cable : DuplexCable = current_port.cable
+                
+                # Selecting cable from duplex cable
+                if current_cable.cable_1.port_1.name == current_port.name:
+                    current_cable = current_cable.cable_1
+                else :
+                    current_cable = current_cable.cable_2
+                
                 current_cable.data = data[i]
-                destination_port : Port = current_cable.port_1 if current_cable.port_1.name != current_port.name else current_cable.port_2
+                
+                destination_port : Port = current_cable.port_2
                 if destination_port == None:
                     continue
                 destination_port.device.write(int(time() - simulator.start), destination_port, "receive", data[i], "ok")
