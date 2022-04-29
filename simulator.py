@@ -15,6 +15,7 @@ class Simulator:
         
         self.computers = {}
         self.hubs = {}
+        self.switches = {}
         #se puede concebir como un solo diccionario de devices
         
         self.start = time()
