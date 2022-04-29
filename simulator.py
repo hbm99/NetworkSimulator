@@ -5,12 +5,13 @@ from instructions.connect import Connect
 from instructions.create import Create
 from instructions.disconnect import Disconnect
 from instructions.send import Send
+from instructions.mac import Mac
 from operator import itemgetter
 
 class Simulator:
     
     def __init__(self):
-        self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), "send" : Send()}
+        self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), "send" : Send(), "mac" : Mac()}
         
         self.computers = {}
         self.hubs = {}
