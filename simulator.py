@@ -44,15 +44,17 @@ class Simulator:
                 return computer_value.ports[0]
         
         splitted_name = name.split('_')
+        splitted_name.pop()
+        splitted_name = ''.join(splitted_name)
         
         for hub_value in self.hubs.values():
-            if splitted_name[0] == hub_value.name:
+            if splitted_name == hub_value.name:
                 for port in hub_value.ports:
                     if port.name == name:
                         return port
         
         for switch_value in self.switches.values():
-            if splitted_name[0] == switch_value.name:
+            if splitted_name == switch_value.name:
                 for port in switch_value.ports:
                     if port.name == name:
                         return port
