@@ -6,17 +6,20 @@ from instructions.create import Create
 from instructions.disconnect import Disconnect
 from instructions.send import Send
 from instructions.mac import Mac
+from instructions.send_frame import SendFrame
 from operator import itemgetter
+
+
 
 class Simulator:
     
     def __init__(self):
-        self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), "send" : Send(), "mac" : Mac()}
+        self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), "send" : Send(), "mac" : Mac(), "send_frame" : SendFrame()}
         
         self.computers = {}
         self.hubs = {}
         self.switches = {}
-        #se puede concebir como un solo diccionario de devices
+        #se tiene que concebir como un solo diccionario de devices
         
         self.start = time()
         self.instructions = []
@@ -41,11 +44,19 @@ class Simulator:
                 return computer_value.ports[0]
         
         splitted_name = name.split('_')
+        
         for hub_value in self.hubs.values():
             if splitted_name[0] == hub_value.name:
                 for port in hub_value.ports:
                     if port.name == name:
                         return port
+        
+        for switch_value in self.switches.values():
+            if splitted_name[0] == switch_value.name:
+                for port in switch_value.ports:
+                    if port.name == name:
+                        return port
+            
 
     def run(self):
         cwd = getcwd()

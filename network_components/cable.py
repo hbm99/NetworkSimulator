@@ -1,4 +1,4 @@
-from network_components.computer.data import Data
+from network_components.data import Data
 
 
 class Cable:
