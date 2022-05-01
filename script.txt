@@ -1,0 +1,8 @@
+0 create host julia
+0 create host pedro
+0 create switch unificador 2
+1 mac pedro A5B4
+1 mac julia A4B5
+2 connect pedro_1 unificador_1
+2 connect julia_1 unificador_2
+3 send_frame pedro A4B5 A6F43400FFB34EAA

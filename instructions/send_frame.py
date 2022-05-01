@@ -1,7 +1,7 @@
 from time import time, sleep
 from instructions.instruction import Instruction
 from network_components.cable import DuplexCable
-from network_components.computer.computer import Computer
+from network_components.computer import Computer
 from network_components.frame import Frame
 from network_components.port import Port
 from network_components.switch import Switch
@@ -15,13 +15,19 @@ class SendFrame(Instruction):
         target_mac = bin(int(args[3], 16))[2:].zfill(16)
         source_mac = bin(int(simulator.computers[computer_name].mac_address.address, 16))[2:].zfill(16)
         data_size = bin(int(len(args[4])/4))[2:].zfill(8)
-        v_data_size = bin(int(0))[2:].zfill(8) # waiting for error detections
+        
         data = bin(int(args[4], 16))[2:].zfill(len(args[4]) * 4)
-        v_data = bin(int(0))[2:].zfill(int(v_data_size, 2)) # waiting for error detections
+        
+        
+        v_data = simulator.bug_catcher.calculate(data)
+        v_data_size = bin(int(len(v_data)))[2:].zfill(8)
         
         frame = Frame(target_mac, source_mac, data_size, v_data_size, data, v_data)
         
+        transmission_data = ""
         for i in range(len(data)):
+            
+            transmission_data += data[i]
             
             simulator.computers[computer_name].write_txt(int(time() - simulator.start), simulator.computers[computer_name].ports[0], "send_frame", data[i], "ok")
             
@@ -54,14 +60,17 @@ class SendFrame(Instruction):
                     
                 if type(destination_port.device) is Computer:
                     if destination_port.device.mac_address.address == args[3]:
-                        destination_port.device.write_txt(int(time() - simulator.start), destination_port, "receive_frame", data[i], "ok")
+                        destination_port.device.write_txt(int(time() - simulator.start), destination_port, "receive_frame", transmission_data[i], "ok")
                         if i == len(data) - 1:
-                            destination_port.device.write_data_txt(int(time() - simulator.start), destination_port.device.name, frame.source_mac, hex(int(data, 2)))
+                            is_corrupt = simulator.bug_catcher.is_corrupted(frame.v_data, transmission_data)
+                            destination_port.device.write_data_txt(int(time() - simulator.start), destination_port.device.name, frame.source_mac, hex(int(transmission_data, 2)), is_corrupt)
                         break
                     if args[3] == "FFFF":
-                        destination_port.device.write_txt(int(time() - simulator.start), destination_port, "receive_frame", data[i], "ok")
+                        destination_port.device.write_txt(int(time() - simulator.start), destination_port, "receive_frame", transmission_data[i], "ok")
                         if i == len(data) - 1:
-                            destination_port.device.write_data_txt(int(time() - simulator.start), destination_port.device.name, frame.source_mac, hex(int(data, 2)))
+                            is_corrupt = simulator.bug_catcher.is_corrupted(frame.v_data, transmission_data)
+                            destination_port.device.write_data_txt(int(time() - simulator.start), destination_port.device.name, frame.source_mac, hex(int(transmission_data, 2)), is_corrupt)
+                            
                 
                 
                 for j in range(len(destination_port.device.ports)):

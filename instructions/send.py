@@ -1,7 +1,7 @@
 from time import time, sleep
 from instructions.instruction import Instruction
 from network_components.cable import DuplexCable
-from network_components.computer.computer import Computer
+from network_components.computer import Computer
 from network_components.mac_address import MacAddress
 from network_components.port import Port
 from network_components.switch import Switch
@@ -40,8 +40,8 @@ class Send(Instruction):
                     current_port.device.mac_addresses[destination_port.device.mac_address.address] = destination_port.device.mac_address
                 
                 destination_port.device.write_txt(int(time() - simulator.start), destination_port, "receive", data[i], "ok")
-                if i == len(data) - 1:
-                    destination_port.device.write_data_txt(int(time() - simulator.start), destination_port.name, simulator.computers[computer_name].mac_address, hex(int(data, 2)))
+                if type(destination_port.device) is Computer and i == len(data) - 1:
+                    destination_port.device.write_data_txt(int(time() - simulator.start), destination_port.name, bin(int(simulator.computers[computer_name].mac_address.address, 16))[2:].zfill(16), hex(int(data, 2)), False)
                 
                 for j in range(len(destination_port.device.ports)):
                     if destination_port.device.ports[j].name == destination_port.name:

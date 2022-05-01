@@ -1,3 +1,5 @@
 .vscode
 *.txt
+!config.txt
+!script.txt
 __pycache__

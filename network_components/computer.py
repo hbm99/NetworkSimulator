@@ -13,6 +13,14 @@ class Computer(Device):
     def create_data_txt(self, name : str):
         open('devices_txt//' + name + '_data.txt', 'w')
         
-    def write_data_txt(self, time, name : str, mac_address : str, data : str):
+    def write_data_txt(self, time, name : str, mac_address : str, data : str, corrupted_data : bool):
         with open('devices_txt//' + name + '_data.txt', 'a') as f:
-            f.write(str(time) + " " + hex(int(mac_address, 2)) + " " + data + "\n")
+            error_signal = ""
+            if corrupted_data:
+                error_signal += "ERROR\n"
+            else : 
+                error_signal += "\n"
+            f.write(str(time) + " " + hex(int(mac_address, 2)) + " " + data + " " + error_signal)
+            
+                
+            

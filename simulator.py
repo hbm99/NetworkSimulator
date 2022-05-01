@@ -1,6 +1,7 @@
 from glob import glob
 from time import time
 from os import getcwd, remove
+from bug_catcher.verification_sum import VerificationSum
 from instructions.connect import Connect
 from instructions.create import Create
 from instructions.disconnect import Disconnect
@@ -16,6 +17,9 @@ class Simulator:
     def __init__(self):
         self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), "send" : Send(), "mac" : Mac(), "send_frame" : SendFrame()}
         
+        self.bug_catcher_type = {"sum" : VerificationSum()}
+        self.bug_catcher = self.bug_catcher_type[self.read_config()]
+        
         self.computers = {}
         self.hubs = {}
         self.switches = {}
@@ -26,6 +30,12 @@ class Simulator:
         self.read_script()
         self.instructions = sorted(self.instructions, key = itemgetter(0))
         #se tiene lista de instrucciones ordenada por <time> en instructions
+    
+    def read_config(self):
+        with open('config.txt') as config:
+            line = config.readline()
+            splitted_line = line.split()
+            return splitted_line.pop()
     
     def read_script(self):
         with open('script.txt') as script:

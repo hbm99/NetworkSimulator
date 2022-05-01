@@ -1,5 +1,5 @@
 from instructions.instruction import Instruction
-from network_components.computer.computer import Computer
+from network_components.computer import Computer
 from network_components.hub import Hub
 from network_components.switch import Switch
 
