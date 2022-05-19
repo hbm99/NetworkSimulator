@@ -1,16 +1,9 @@
 from glob import glob
 from time import time
 from os import getcwd, remove
-from bug_catcher.verification_sum import VerificationSum
-from instructions.connect import Connect
-from instructions.create import Create
-from instructions.disconnect import Disconnect
-from instructions.send import Send
-from instructions.mac import Mac
-from instructions.send_frame import SendFrame
+from bug_catcher.bug_catcher import VerificationSum
+from instructions.instruction import Connect, Create, Disconnect, Mac, Send, SendFrame
 from operator import itemgetter
-
-
 
 class Simulator:
     
