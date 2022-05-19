@@ -1,5 +1,9 @@
 from abc import ABC
-import network_components.device_utils as device_utils
+
+from numpy import broadcast
+
+from network_components.device_utils import IPAddress, MacAddress, Port, SubnetworkMask
+
 
 class Device(ABC):
     def __init__(self, name):
@@ -16,8 +20,10 @@ class Device(ABC):
 class Computer(Device):
     def __init__(self, name):
         super().__init__(name)
-        self.ports = [device_utils.Port(name + "_" + str(1), self)]
-        self.mac_address = device_utils.MacAddress("")
+        self.ports = [Port(name + "_" + str(1), self)]
+        self.mac_address = MacAddress("")
+        self.ip = IPAddress("")
+        self.subnetwork_mask = SubnetworkMask("")
         self.txt = self.create_data_txt(self.name)
     
     def create_data_txt(self, name : str):
@@ -31,6 +37,30 @@ class Computer(Device):
             else : 
                 error_signal += "\n"
             f.write(str(time) + " " + hex(int(mac_address, 2)) + " " + data + " " + error_signal)
+    
+    #Returns the host subnetwork
+    def subnetwork_address(self):
+        bin_ip = bin(self.ip.address)
+        bin_mask = bin(self.subnetwork_mask.address)
+        return bin_ip & bin_mask
+    
+    #Verifies if host belongs to the subnetwork
+    def is_subnetwork_address(self, possible_subnetwork):
+        return self.subnetwork_address() == possible_subnetwork
+    
+    #Returns host broadcast address
+    def broadcast_address(self):
+        index_subnetwork = 0
+        for i in range(len(self.subnetwork_mask.address)):
+            if self.subnetwork_mask.address[i] == '0':
+                index_subnetwork = i
+                break
+        broadcast_address = [0] * 32
+        for i in range(index_subnetwork, len(broadcast_address), 1):
+            broadcast_address[i] = 1
+        for i in range(broadcast_address):
+            broadcast_address[i] = int(self.ip.address) | broadcast_address[i]
+        return bin(str(broadcast_address))
             
 class Hub(Device):
     def __init__(self, name, ports_count):
@@ -40,7 +70,7 @@ class Hub(Device):
     def create_ports(self, name, ports_count):
         ports = []
         for i in range(ports_count):
-            ports.append(device_utils.Port(name + "_" + str(i + 1), self))
+            ports.append(Port(name + "_" + str(i + 1), self))
         return ports
     
 class Switch(Device):
@@ -52,6 +82,6 @@ class Switch(Device):
     def create_ports(self, name, ports_count):
         ports = []
         for i in range(ports_count):
-            ports.append(device_utils.Port(name + "_" + str(i + 1), self))
+            ports.append(Port(name + "_" + str(i + 1), self))
         return ports
 
