@@ -11,24 +11,35 @@ class Simulator:
         self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), "send" : Send(), "mac" : Mac(), "send_frame" : SendFrame()}
         
         self.bug_catcher_type = {"sum" : VerificationSum()}
-        self.bug_catcher = self.bug_catcher_type[self.read_config()]
+        self.bug_catcher = self.bug_catcher_type[self.read_bug_catcher()]
         
         self.computers = {}
         self.hubs = {}
         self.switches = {}
+        self.routers = {}
         #se tiene que concebir como un solo diccionario de devices
         
+        self.signal_time = self.read_signal_time/1000
         self.start = time()
         self.instructions = []
         self.read_script()
         self.instructions = sorted(self.instructions, key = itemgetter(0))
         #se tiene lista de instrucciones ordenada por <time> en instructions
     
-    def read_config(self):
+    def read_bug_catcher(self):
         with open('config.txt') as config:
-            line = config.readline()
-            splitted_line = line.split()
+            error_detection_line = config.readline()
+            splitted_line = error_detection_line.split()
             return splitted_line.pop()
+    
+    def read_signal_time(self):
+        with open('config.txt') as config:
+            while True:
+                line = config.readline()
+                if not(line):
+                    break
+                splitted_line = line.split()
+        return int(splitted_line.pop())
     
     def read_script(self):
         with open('script.txt') as script:

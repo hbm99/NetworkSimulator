@@ -1,1 +1,2 @@
 error_detection = sum
+signal_time = 10

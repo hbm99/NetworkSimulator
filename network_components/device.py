@@ -1,7 +1,4 @@
 from abc import ABC
-
-from numpy import broadcast
-
 from network_components.device_utils import IPAddress, MacAddress, Port, SubnetworkMask
 
 
@@ -9,6 +6,12 @@ class Device(ABC):
     def __init__(self, name):
         self.name = name
         self.txt = self.create_txt(self.name)
+        
+    def create_ports(self, name, ports_count):
+        ports = []
+        for i in range(ports_count):
+            ports.append(Port(name + "_" + str(i + 1), self))
+        return ports
         
     def create_txt(self, name : str):
         open('devices_txt//' + name + '.txt', 'w')
@@ -67,21 +70,17 @@ class Hub(Device):
         super().__init__(name)
         self.ports = self.create_ports(name, int(ports_count))
     
-    def create_ports(self, name, ports_count):
-        ports = []
-        for i in range(ports_count):
-            ports.append(Port(name + "_" + str(i + 1), self))
-        return ports
-    
 class Switch(Device):
     def __init__(self, name, ports_count):
         super().__init__(name)
         self.ports = self.create_ports(name, int(ports_count))
         self.mac_addresses = {}
     
-    def create_ports(self, name, ports_count):
-        ports = []
-        for i in range(ports_count):
-            ports.append(Port(name + "_" + str(i + 1), self))
-        return ports
+class Router(Device):
+    def __init__(self, name, ports_count):
+        super().__init__(name)
+        self.ports = self.create_ports(name, int(ports_count))
+        self.ip = IPAddress("")
+        self.subnetwork_mask = SubnetworkMask("")
+
 

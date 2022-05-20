@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from time import time, sleep
-
-from network_components.device import Computer, Hub, Switch
+from network_components.device import Computer, Hub, Router, Switch
 from network_components.device_utils import DuplexCable, Frame, Port
 
 
@@ -11,7 +10,7 @@ class Instruction(ABC):
     def execute(self, simulator, args):
         pass
  
-        
+
 class Create(Instruction):
     
     def execute(self, simulator, args):
@@ -24,6 +23,9 @@ class Create(Instruction):
         elif args[2] == "switch":
             switch = Switch(args[3], args[4])
             simulator.switches[args[3]] = switch
+        elif args[2] == "router":
+            router = Router(args[3], args[4])
+            simulator.routers[args[3]] = router
             
 class Connect(Instruction):
     
@@ -52,6 +54,15 @@ class Mac(Instruction):
     def execute(self, simulator, args):
         simulator.computers[args[2]].mac_address.address = args[3]
         
+class IP(Instruction):
+    
+    def execute(self, simulator, args):
+        device = simulator.computers[args[2]]
+        if device is None:
+            device = simulator.routers[args[2]]
+        device.ip.address = args[3]
+        device.subnetwork_mask.address = args[4]
+
 class SendFrame(Instruction):
     
     def execute(self, simulator, args):
@@ -122,7 +133,7 @@ class SendFrame(Instruction):
                     if destination_port.device.ports[j].name == destination_port.name:
                         continue
                     queue_bfs.append(destination_port.device.ports[j])
-            sleep(10/1000 - (time() - initial_time))
+            sleep(simulator.signal_time - (time() - initial_time))
             
 
 class Send(Instruction):
@@ -166,4 +177,4 @@ class Send(Instruction):
                     if destination_port.device.ports[j].name == destination_port.name:
                         continue
                     queue_bfs.append(destination_port.device.ports[j])
-            sleep(10/1000 - (time() - initial_time))
+            sleep(simulator.signal_time - (time() - initial_time))
