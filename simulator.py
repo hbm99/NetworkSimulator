@@ -13,13 +13,15 @@ class Simulator:
         self.bug_catcher_type = {"sum" : VerificationSum()}
         self.bug_catcher = self.bug_catcher_type[self.read_bug_catcher()]
         
+        self.subnetworks = {}
+        
         self.computers = {}
         self.hubs = {}
         self.switches = {}
         self.routers = {}
         #se tiene que concebir como un solo diccionario de devices
         
-        self.signal_time = self.read_signal_time/1000
+        self.signal_time = self.read_signal_time()/1000
         self.start = time()
         self.instructions = []
         self.read_script()

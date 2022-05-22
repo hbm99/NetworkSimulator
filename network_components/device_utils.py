@@ -37,6 +37,12 @@ class MacAddress:
 class IPAddress:
     def __init__(self, address : str):
         self.address = address
+
 class SubnetworkMask:
     def __init__(self, address : str):
         self.address = address
+        
+class Subnetwork:
+    def __init__(self, address : str):
+        self.address = address
+        self.devices = {}

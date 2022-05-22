@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from time import time, sleep
 from network_components.device import Computer, Hub, Router, Switch
-from network_components.device_utils import DuplexCable, Frame, Port
+from network_components.device_utils import DuplexCable, Frame, Port, Subnetwork
 
 
 class Instruction(ABC):
@@ -62,7 +62,17 @@ class IP(Instruction):
             device = simulator.routers[args[2]]
         device.ip.address = args[3]
         device.subnetwork_mask.address = args[4]
-
+        
+        
+        subnetwork_address = device.subnetwork_address()
+        subnetwork = simulator.subnetworks[subnetwork_address]
+        
+        if subnetwork is None:
+            subnetwork = Subnetwork(subnetwork_address)
+            simulator.subnetworks[subnetwork_address] = subnetwork
+        
+        subnetwork.devices[device.name] = device
+            
 class SendFrame(Instruction):
     
     def execute(self, simulator, args):

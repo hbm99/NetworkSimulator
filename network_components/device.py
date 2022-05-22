@@ -20,13 +20,41 @@ class Device(ABC):
         with open('devices_txt//' + port.device.name + '.txt', 'a') as f:
             f.write(str(time) + " " + port.name + " " + operation + " " + data + " " + operation_status + "\n")
             
-class Computer(Device):
-    def __init__(self, name):
-        super().__init__(name)
-        self.ports = [Port(name + "_" + str(1), self)]
-        self.mac_address = MacAddress("")
+class IPDevice:
+    def __init__(self):
         self.ip = IPAddress("")
         self.subnetwork_mask = SubnetworkMask("")
+        
+    #Returns the IPDevice subnetwork
+    def subnetwork_address(self):
+        bin_ip = bin(self.ip.address)
+        bin_mask = bin(self.subnetwork_mask.address)
+        return bin_ip & bin_mask
+    
+    #Verifies if IPDevice belongs to the subnetwork
+    def is_subnetwork_address(self, possible_subnetwork):
+        return self.subnetwork_address() == possible_subnetwork
+    
+    #Returns IPDevice broadcast address
+    def broadcast_address(self):
+        index_subnetwork = 0
+        for i in range(len(self.subnetwork_mask.address) - 1, -1, -1):
+            if self.subnetwork_mask.address[i] != '0':
+                index_subnetwork = i
+                break
+        broadcast_address = [0] * 32
+        for i in range(index_subnetwork, len(broadcast_address), 1):
+            broadcast_address[i] = 1
+        for i in range(broadcast_address):
+            broadcast_address[i] = int(self.ip.address) | broadcast_address[i]
+        return bin(str(broadcast_address))
+            
+class Computer(Device):
+    def __init__(self, name):
+        Device.__init__(self, name)
+        IPDevice.__init__(self)
+        self.ports = [Port(name + "_" + str(1), self)]
+        self.mac_address = MacAddress("")
         self.txt = self.create_data_txt(self.name)
     
     def create_data_txt(self, name : str):
@@ -40,30 +68,6 @@ class Computer(Device):
             else : 
                 error_signal += "\n"
             f.write(str(time) + " " + hex(int(mac_address, 2)) + " " + data + " " + error_signal)
-    
-    #Returns the host subnetwork
-    def subnetwork_address(self):
-        bin_ip = bin(self.ip.address)
-        bin_mask = bin(self.subnetwork_mask.address)
-        return bin_ip & bin_mask
-    
-    #Verifies if host belongs to the subnetwork
-    def is_subnetwork_address(self, possible_subnetwork):
-        return self.subnetwork_address() == possible_subnetwork
-    
-    #Returns host broadcast address
-    def broadcast_address(self):
-        index_subnetwork = 0
-        for i in range(len(self.subnetwork_mask.address)):
-            if self.subnetwork_mask.address[i] == '0':
-                index_subnetwork = i
-                break
-        broadcast_address = [0] * 32
-        for i in range(index_subnetwork, len(broadcast_address), 1):
-            broadcast_address[i] = 1
-        for i in range(broadcast_address):
-            broadcast_address[i] = int(self.ip.address) | broadcast_address[i]
-        return bin(str(broadcast_address))
             
 class Hub(Device):
     def __init__(self, name, ports_count):
@@ -76,11 +80,12 @@ class Switch(Device):
         self.ports = self.create_ports(name, int(ports_count))
         self.mac_addresses = {}
     
-class Router(Device):
+class Router(Device, IPDevice):
     def __init__(self, name, ports_count):
-        super().__init__(name)
+        Device.__init__(self, name)
+        IPDevice.__init__(self)
         self.ports = self.create_ports(name, int(ports_count))
-        self.ip = IPAddress("")
-        self.subnetwork_mask = SubnetworkMask("")
+
+    
 
 
