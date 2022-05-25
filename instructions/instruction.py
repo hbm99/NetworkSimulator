@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from time import time, sleep
 from network_components.device import Computer, Hub, Router, Switch
-from network_components.device_utils import DuplexCable, Frame, Port, Subnetwork
+from network_components.device_utils import DuplexCable, Frame, MacAddress, Port, Subnetwork
 
 
 class Instruction(ABC):
@@ -18,8 +18,12 @@ class Create(Instruction):
             hub = Hub(args[3], args[4])
             simulator.hubs[args[3]] = hub
         elif args[2] == "host":
-            computer = Computer(args[3])
-            simulator.computers[args[3]] = computer
+            name_interface = args[3].split(':')
+            interface = 1
+            if len(name_interface) == 2:
+                interface = int(name_interface[1])
+            computer = Computer(name_interface[0], interface)
+            simulator.computers[name_interface[0]] = computer
         elif args[2] == "switch":
             switch = Switch(args[3], args[4])
             simulator.switches[args[3]] = switch
@@ -52,7 +56,9 @@ class Disconnect(Instruction):
 class Mac(Instruction):
     
     def execute(self, simulator, args):
-        simulator.computers[args[2]].mac_address.address = args[3]
+        mac_address = MacAddress(args[3])
+        name_interface = args[2].split(':')
+        simulator.computers[name_interface[0]].mac_addresses[args[3]] = mac_address
         
 class IP(Instruction):
     

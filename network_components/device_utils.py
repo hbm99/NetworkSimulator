@@ -46,3 +46,10 @@ class Subnetwork:
     def __init__(self, address : str):
         self.address = address
         self.devices = {}
+        
+class Route:
+    def __init__(self, destination_ip : str, route_mask : str, gateway_ip: str, interface : int):
+        self.destination_ip = destination_ip
+        self.route_mask = route_mask
+        self.gateway_ip = gateway_ip
+        self.interface = interface

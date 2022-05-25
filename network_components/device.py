@@ -1,8 +1,7 @@
-from abc import ABC
-from network_components.device_utils import IPAddress, MacAddress, Port, SubnetworkMask
+from network_components.device_utils import IPAddress, Port, SubnetworkMask
 
 
-class Device(ABC):
+class Device:
     def __init__(self, name):
         self.name = name
         self.txt = self.create_txt(self.name)
@@ -49,12 +48,12 @@ class IPDevice:
             broadcast_address[i] = int(self.ip.address) | broadcast_address[i]
         return bin(str(broadcast_address))
             
-class Computer(Device):
-    def __init__(self, name):
+class Computer(Device, IPDevice):
+    def __init__(self, name, ports_count):
         Device.__init__(self, name)
         IPDevice.__init__(self)
-        self.ports = [Port(name + "_" + str(1), self)]
-        self.mac_address = MacAddress("")
+        self.ports = self.create_ports(name, ports_count)
+        self.mac_addresses = {}
         self.txt = self.create_data_txt(self.name)
     
     def create_data_txt(self, name : str):
