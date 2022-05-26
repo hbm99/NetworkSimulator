@@ -1,4 +1,5 @@
-from network_components.device_utils import Port
+
+from network_components.device_utils import Port, Route
 
 
 class Device:
@@ -21,8 +22,7 @@ class Device:
             
 class IPDevice:
     def __init__(self):
-        self.ip_mask_addresses = {} # IPAddress("")
-        # self.subnetwork_mask = ∫SubnetworkMask("")
+        self.ip_mask_addresses = {}
         
     #Returns the IPDevice subnetwork
     def subnetwork_address(self):
@@ -50,15 +50,35 @@ class IPDevice:
         for i in range(broadcast_address):
             broadcast_address[i] = int(self.ip_mask_addresses[first_key][0].address) | broadcast_address[i]
         return bin(str(broadcast_address))
+    
+class RoutesTableDevice:
+    def __init__(self):
+        self.routes_table = []
+    def insert_route(self, route : Route):
+        self.routes_table(route)
+        self.routes_table.sort(self.instructions, key = self.get_1s)
+        
+    def get_1s(route : Route):
+        return route.route_mask.count("1")
             
-class Computer(Device, IPDevice):
+class Computer(Device, IPDevice, RoutesTableDevice):
     def __init__(self, name, ports_count):
         Device.__init__(self, name)
         IPDevice.__init__(self)
+        RoutesTableDevice.__init__(self)
         self.ports = self.create_ports(name, ports_count)
         self.mac_addresses = {}
         self.txt = self.create_data_txt(self.name)
         self.payload_txt = self.create_payload_txt(self.name)
+        self.fill_routes_table(ports_count)
+    
+    
+    def fill_routes_table(self, ports_count):
+        subnetwork_address = self.subnetwork_address()
+        subnetwork_route = Route(subnetwork_address, self.ip_mask_addresses[next(iter(self.ip_mask_addresses))], "0" * 32, ports_count)
+        self.insert_route(subnetwork_route)
+        default_route = Route("0" * 32, "0" * 32, subnetwork_address[:-1] + "1", ports_count)
+        self.insert_route(default_route)
     
     def create_data_txt(self, name : str):
         open('devices_txt//' + name + '_data.txt', 'w')
@@ -77,9 +97,12 @@ class Computer(Device, IPDevice):
     
     def write_payload_txt(self, name, time, ip, data):
         with open('devices_txt//' + name + '_payload.txt', 'a') as f:
-            f.write(str(time) + " " + int(ip, 2) + " " + data + "\n")
+            i = 8
+            f.write(str(time) + " " + int(ip[0 : i], 2) + "." + int(ip[i : 2 * i], 2) + "." 
+                    + int(ip[2 * i : 3 * i], 2) + "." + int(ip[3 * i : 4 * i], 2) + "." + " " 
+                    + data + "\n")
             
-            
+
 class Hub(Device):
     def __init__(self, name, ports_count):
         super().__init__(name)
@@ -91,10 +114,11 @@ class Switch(Device):
         self.ports = self.create_ports(name, int(ports_count))
         self.mac_addresses = {}
     
-class Router(Device, IPDevice):
+class Router(Device, IPDevice, RoutesTableDevice):
     def __init__(self, name, ports_count):
         Device.__init__(self, name)
         IPDevice.__init__(self)
+        RoutesTableDevice.__init__(self)
         self.ports = self.create_ports(name, int(ports_count))
 
     

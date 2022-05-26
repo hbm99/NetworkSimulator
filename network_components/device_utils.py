@@ -53,3 +53,13 @@ class Route:
         self.route_mask = route_mask
         self.gateway_ip = gateway_ip
         self.interface = interface
+
+class IPPacket:
+    def __init__(self, destination_ip, source_ip, payload_size, payload_data, time_to_live = "0" * 8, protocol = "0" * 8):
+        self.destination_ip = destination_ip
+        self.source_ip = source_ip
+        self.ttl = time_to_live
+        self.protocol = protocol
+        self.payload_size = payload_size
+        self.payload_data = payload_data
+        

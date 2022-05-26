@@ -1,7 +1,7 @@
 
 from abc import ABC, abstractmethod
 from time import time
-from network_components.device_utils import Frame
+from network_components.device_utils import Frame, IPPacket
 
 
 class Protocol(ABC):
@@ -49,3 +49,7 @@ class ARP(Protocol):
                     mac_from_target_ip = computer_value.mac_addresses[next(iter(computer_value.mac_addresses))]
     
         return mac_from_target_ip
+    
+class ICMP(Protocol):
+    def execute(self, simulator, destination_ip, source_ip, payload_data, ttl = "0" * 8):
+        return IPPacket(destination_ip, source_ip, "0" * 7 + "1", payload_data, ttl, "0" * 7 + "1")

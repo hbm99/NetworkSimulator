@@ -39,7 +39,7 @@ class Connect(Instruction):
         wire = DuplexCable(port_1, port_2)
         port_1.cable = wire
         port_2.cable = wire
-            
+
 class Disconnect(Instruction):
     
     def execute(self, simulator, args):
