@@ -1,4 +1,4 @@
-from network_components.device_utils import IPAddress, Port, SubnetworkMask
+from network_components.device_utils import Port
 
 
 class Device:
@@ -21,13 +21,14 @@ class Device:
             
 class IPDevice:
     def __init__(self):
-        self.ip = IPAddress("")
-        self.subnetwork_mask = SubnetworkMask("")
+        self.ip_mask_addresses = {} # IPAddress("")
+        # self.subnetwork_mask = ∫SubnetworkMask("")
         
     #Returns the IPDevice subnetwork
     def subnetwork_address(self):
-        bin_ip = bin(self.ip.address)
-        bin_mask = bin(self.subnetwork_mask.address)
+        first_key = next(iter(self.ip_mask_addresses))
+        bin_ip = bin(self.ip_mask_addresses[first_key][0].address)
+        bin_mask = bin(self.ip_mask_addresses[first_key][1].address)
         return bin_ip & bin_mask
     
     #Verifies if IPDevice belongs to the subnetwork
@@ -36,16 +37,18 @@ class IPDevice:
     
     #Returns IPDevice broadcast address
     def broadcast_address(self):
+        first_key = next(iter(self.ip_mask_addresses))
         index_subnetwork = 0
-        for i in range(len(self.subnetwork_mask.address) - 1, -1, -1):
-            if self.subnetwork_mask.address[i] != '0':
+        mask = self.ip_mask_addresses[first_key][1].address
+        for i in range(len(mask) - 1, -1, -1):
+            if mask[i] != '0':
                 index_subnetwork = i
                 break
         broadcast_address = [0] * 32
         for i in range(index_subnetwork, len(broadcast_address), 1):
             broadcast_address[i] = 1
         for i in range(broadcast_address):
-            broadcast_address[i] = int(self.ip.address) | broadcast_address[i]
+            broadcast_address[i] = int(self.ip_mask_addresses[first_key][0].address) | broadcast_address[i]
         return bin(str(broadcast_address))
             
 class Computer(Device, IPDevice):
@@ -55,9 +58,13 @@ class Computer(Device, IPDevice):
         self.ports = self.create_ports(name, ports_count)
         self.mac_addresses = {}
         self.txt = self.create_data_txt(self.name)
+        self.payload_txt = self.create_payload_txt(self.name)
     
     def create_data_txt(self, name : str):
         open('devices_txt//' + name + '_data.txt', 'w')
+    
+    def create_payload_txt(self, name : str):
+        open('devices_txt//' + name + '_payload.txt', 'w')
         
     def write_data_txt(self, time, name : str, mac_address : str, data : str, corrupted_data : bool):
         with open('devices_txt//' + name + '_data.txt', 'a') as f:
@@ -67,6 +74,11 @@ class Computer(Device, IPDevice):
             else : 
                 error_signal += "\n"
             f.write(str(time) + " " + hex(int(mac_address, 2)) + " " + data + " " + error_signal)
+    
+    def write_payload_txt(self, name, time, ip, data):
+        with open('devices_txt//' + name + '_payload.txt', 'a') as f:
+            f.write(str(time) + " " + int(ip, 2) + " " + data + "\n")
+            
             
 class Hub(Device):
     def __init__(self, name, ports_count):
