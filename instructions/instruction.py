@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from time import time, sleep
+
+from instructions.protocol import ARP, ICMP
 from network_components.device import Computer, Hub, Router, Switch
-from network_components.device_utils import DuplexCable, Frame, IPAddress, MacAddress, Port, Subnetwork
+from network_components.device_utils import DuplexCable, Frame, IPAddress, IPPacket, MacAddress, Port, Subnetwork
 
 
 class Instruction(ABC):
@@ -195,3 +197,39 @@ class Send(Instruction):
                         continue
                     queue_bfs.append(destination_port.device.ports[j])
             sleep(simulator.signal_time - (time() - initial_time))
+            
+class SendPacket(Instruction):
+    
+    def execute(self, simulator, args):
+        
+        host = simulator.computers[args[2]]
+        source_ip = host.ip_mask_addresses[host.first_key][0]
+        target_ip = args[3]
+        
+        payload_size = bin(int(len(args[4])/4))[2:].zfill(8)
+        payload_data = bin(int(args[4], 16))[2:].zfill(len(args[4]) * 4)
+        
+        ip_packet = IPPacket(target_ip, source_ip, payload_size, payload_data)
+        
+        destination_mac = ""
+        if not host.contains_ip(host.routes_table, target_ip): # implementar método contains ip que devuelve si está en la tabla de rutas la ruta con ese ip
+            arp = ARP()
+            destination_mac = arp.execute(simulator, host.mac_addresses[host.first_key], target_ip)
+        else : 
+            destination_host = simulator.ip_dictionary[target_ip] # agregar a simulator un diccionario de ip que tenga como valores las computadoras a las que pertenece ese ip
+            destination_mac = destination_host.mac_addresses[destination_host.first_key]
+        
+        device_with_ip = host.routing(ip_packet)
+        
+        if device_with_ip is not None:
+            icmp = ICMP()
+            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key][0], bin(3)[2:].zfill(8))
+            
+            new_send_packet_args = [args[0], "send_packet", device_with_ip.name, source_ip, icmp_packet.payload_data]
+            self.execute(simulator, new_send_packet_args)
+            
+        
+        
+        
+            
+        

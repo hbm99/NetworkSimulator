@@ -1,4 +1,5 @@
 
+from abc import abstractmethod
 from network_components.device_utils import Port, Route
 
 
@@ -19,16 +20,19 @@ class Device:
     def write_txt(self, time : int, port, operation : str, data : str, operation_status : str):
         with open('devices_txt//' + port.device.name + '.txt', 'a') as f:
             f.write(str(time) + " " + port.name + " " + operation + " " + data + " " + operation_status + "\n")
+    def find_port(port_name : str):
+        # a implementar, ver llamado en routing de router
+        return
             
 class IPDevice:
     def __init__(self):
         self.ip_mask_addresses = {}
+        self.first_key = next(iter(self.ip_mask_addresses))
         
     #Returns the IPDevice subnetwork
     def subnetwork_address(self):
-        first_key = next(iter(self.ip_mask_addresses))
-        bin_ip = bin(self.ip_mask_addresses[first_key][0].address)
-        bin_mask = bin(self.ip_mask_addresses[first_key][1].address)
+        bin_ip = bin(self.ip_mask_addresses[self.first_key][0].address)
+        bin_mask = bin(self.ip_mask_addresses[self.first_key][1].address)
         return bin_ip & bin_mask
     
     #Verifies if IPDevice belongs to the subnetwork
@@ -37,9 +41,9 @@ class IPDevice:
     
     #Returns IPDevice broadcast address
     def broadcast_address(self):
-        first_key = next(iter(self.ip_mask_addresses))
+        
         index_subnetwork = 0
-        mask = self.ip_mask_addresses[first_key][1].address
+        mask = self.ip_mask_addresses[self.first_key][1].address
         for i in range(len(mask) - 1, -1, -1):
             if mask[i] != '0':
                 index_subnetwork = i
@@ -48,7 +52,7 @@ class IPDevice:
         for i in range(index_subnetwork, len(broadcast_address), 1):
             broadcast_address[i] = 1
         for i in range(broadcast_address):
-            broadcast_address[i] = int(self.ip_mask_addresses[first_key][0].address) | broadcast_address[i]
+            broadcast_address[i] = int(self.ip_mask_addresses[self.first_key][0].address) | broadcast_address[i]
         return bin(str(broadcast_address))
     
 class RoutesTableDevice:
@@ -57,6 +61,9 @@ class RoutesTableDevice:
     def insert_route(self, route : Route):
         self.routes_table(route)
         self.routes_table.sort(self.instructions, key = self.get_1s)
+    @abstractmethod
+    def routing(self, ip_packet):
+        pass
         
     def get_1s(route : Route):
         return route.route_mask.count("1")
@@ -102,6 +109,10 @@ class Computer(Device, IPDevice, RoutesTableDevice):
                     + int(ip[2 * i : 3 * i], 2) + "." + int(ip[3 * i : 4 * i], 2) + "." + " " 
                     + data + "\n")
             
+    def routing(self, ip_packet):
+        # nos quedamos aquí
+        return
+            
 
 class Hub(Device):
     def __init__(self, name, ports_count):
@@ -120,7 +131,36 @@ class Router(Device, IPDevice, RoutesTableDevice):
         IPDevice.__init__(self)
         RoutesTableDevice.__init__(self)
         self.ports = self.create_ports(name, int(ports_count))
-
-    
+        
+    def routing(self, ip_packet):
+        
+        # if self.ip_mask_addresses.__contains__(ip_packet.target_ip): # este caso no debe ocurrir aquí porque debe terminar en un host, no en un router
+        #     return None
+        
+        for route in self.routes_table:
+            and_target_ip_route_mask = bin(int(ip_packet.target_ip, 2)) & bin(int(route.route_mask, 2))
+            if str(and_target_ip_route_mask) == route.target_ip:
+                
+                sending_port : Port = self.find_port(self.name + "_" + str(route.interface)) # implementar método que a partir del nombre devuelve el puerto
+                
+                current_cable = sending_port.cable
+                
+                # Selecting cable from duplex cable
+                if current_cable.cable_1.port_1.name == sending_port.name:
+                    current_cable = current_cable.cable_1
+                else :
+                    current_cable = current_cable.cable_2
+                    
+                destination_port : Port = current_cable.port_2
+                
+                if destination_port.device is IPDevice:
+                    ip_packet.target_ip = route.gateway_ip
+                    ip_packet.source_ip = destination_port.device
+                    destination_port.device.routing(ip_packet)
+                    return None
+        
+        return self
+        
+        
 
 
