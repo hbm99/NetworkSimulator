@@ -65,9 +65,12 @@ class Mac(Instruction):
 class IP(Instruction):
     
     def execute(self, simulator, args):
-        device = simulator.computers[args[2]]
+        
+        name_interface = args[2].split(':')
+        name = name_interface[0]
+        device = simulator.computers[name]
         if device is None:
-            device = simulator.routers[args[2]]
+            device = simulator.routers[name]
         
         ip_address = IPAddress(args[3])
         mask_address = SubnetworkMask(args[4])
@@ -212,7 +215,17 @@ class SendPacket(Instruction):
         
         ip_packet = IPPacket(target_ip, source_ip, payload_size, payload_data)
         
+        self.send(simulator, ip_packet, host)
+        
+        
+    
+    def send(self, simulator, ip_packet, host):
+        
+        target_ip = ip_packet.target_ip
+        source_ip = ip_packet.source_ip
+        
         destination_mac = ""
+        
         if not host.contains_ip(target_ip):
             arp = ARP()
             destination_mac = arp.execute(simulator, host.mac_addresses[host.first_key], target_ip)
@@ -222,12 +235,72 @@ class SendPacket(Instruction):
         
         device_with_ip = host.routing(ip_packet, simulator)
         
-        if device_with_ip is not None:
+        #device from router routing
+        if device_with_ip[0] is not None:
             icmp = ICMP()
             icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key][0], bin(3)[2:].zfill(8))
             
-            new_send_packet_args = [args[0], "send_packet", device_with_ip.name, source_ip, icmp_packet.payload_data]
-            self.execute(simulator, new_send_packet_args)
+            """ new_send_packet_args = [0, "send_packet", device_with_ip[0].name, source_ip, icmp_packet.payload_data]
+            self.execute(simulator, new_send_packet_args) """
+            
+            self.send(simulator, icmp_packet, device_with_ip[0].name)
+        
+        #device from host routing
+        if device_with_ip[1] is not None:
+            icmp = ICMP()
+            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key][0], bin(0)[2:].zfill(8))
+            
+            """ new_send_packet_args = [0, "send_packet", device_with_ip[1].name, source_ip, icmp_packet.payload_data]
+            self.execute(simulator, new_send_packet_args) """
+            
+            self.send(simulator, icmp_packet, device_with_ip[1].name)
+            
+class Ping(Instruction):
+    
+    def execute(self, simulator, args):
+        icmp = ICMP()
+        host = simulator.computers[args[2]]
+        ping_icmp_packet = icmp.execute(simulator, args[3], host.ip_mask_addresses[host.first_key][0], "00001000")
+        send_packet = SendPacket() 
+        for i in range(4):
+            initial_time = time()
+            send_packet.send(simulator, ping_icmp_packet, host)
+            sleep(100/1000 - (time() - initial_time))
+            
+class Route(Instruction):
+    def __init__(self):
+        self.route_instructions = {"reset" : RouteReset(), "add" : RouteAdd(), "delete" : RouteDelete()}
+    
+    def execute(self, simulator, args):
+        route_instruction = self.route_instructions[args[2]]
+        route_instruction.execute(simulator, args)
+
+class RouteReset(Instruction):
+    
+    def execute(self, simulator, args):
+        simulator.routers[args[3]].routes_table.clear()
+
+class RouteAdd(Instruction):
+    
+    def execute(self, simulator, args):
+        simulator.routers[args[3]].insert_route(Route(args[4], args[5], args[6], args[7]))
+        
+class RouteDelete(Instruction):
+    
+    def execute(self, simulator, args):
+        
+        # Verifies the correct use of instruction RouteDelete
+        if len(args) != 8: 
+            return
+        
+        router : Router = simulator.routers[args[3]]
+        for route in router.routes_table:
+            if args[4] == route.target_ip and args[5] == route.route_mask and args[6] == route.gateway_ip and args[7] == route.interface:
+                router.routes_table.remove(route)
+    
+        
+        
+            
             
         
         

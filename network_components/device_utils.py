@@ -1,5 +1,4 @@
 
-
 class Data:
     def __init__(self, str_data):
         self.str_data = str_data
@@ -59,7 +58,8 @@ class IPPacket:
         self.target_ip = destination_ip
         self.source_ip = source_ip
         self.ttl = time_to_live
-        self.protocol = protocol
         self.payload_size = payload_size
         self.payload_data = payload_data
+        self.protocol = protocol
+    
         

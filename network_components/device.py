@@ -64,6 +64,7 @@ class IPDevice:
 class RoutesTableDevice:
     def __init__(self):
         self.routes_table = []
+    
     def insert_route(self, route : Route):
         self.routes_table(route)
         self.routes_table.sort(self.instructions, key = self.get_1s)
@@ -135,12 +136,20 @@ class Computer(Device, IPDevice, RoutesTableDevice):
         self.write_payload_txt(self.name, int(time() - simulator.start), ip_packet.source_ip, 
                                ip_packet.payload_data, int(ip_packet.protocol[-1]))
         
+        # Verify if payload from icmp is ping
+        if ip_packet.protocol == "00000001":
+            if ip_packet.payload_data == "00001000":
+                # necessary to send pong
+                return None, self
+            elif ip_packet.payload_data == "00000011":
+                return None, None
+        
         # stop case, when goal is reached 
         if self.ip_mask_addresses.__contains__(ip_packet.target_ip): 
             target_device = simulator.ip_dictionary[ip_packet.target_ip]
             target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
                                              ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))
-            return None
+            return None, None
         
         # searching if target device is at a subnetwork from the sending host
         for ip_mask in self.ip_mask_addresses.values():
@@ -149,7 +158,7 @@ class Computer(Device, IPDevice, RoutesTableDevice):
             if current_subnetwork == target_device.subnetwork_address(ip_packet.target_ip):
                 target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
                                                 ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))
-                return None
+                return None, None
         gateway_ip = self.subnetwork_address()[:-1] + "1"
         gateway_device : RoutesTableDevice = simulator.ip_dictionary[gateway_ip]
         gateway_device.routing(ip_packet, simulator)
@@ -197,9 +206,9 @@ class Router(Device, IPDevice, RoutesTableDevice):
                     ip_packet.target_ip = route.gateway_ip
                     # ip_packet.source_ip = destination_port.device
                     destination_port.device.routing(ip_packet, simulator)
-                    return None
+                    return None, None
         
-        return self
+        return self, None
         
         
 
