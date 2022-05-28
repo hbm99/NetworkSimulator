@@ -13,6 +13,8 @@ class Simulator:
         self.bug_catcher_type = {"sum" : VerificationSum()}
         self.bug_catcher = self.bug_catcher_type[self.read_bug_catcher()]
         
+        self.ip_dictionary = {}
+        
         self.subnetworks = {}
         
         self.computers = {}

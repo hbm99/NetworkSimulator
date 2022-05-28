@@ -3,7 +3,7 @@ from time import time, sleep
 
 from instructions.protocol import ARP, ICMP
 from network_components.device import Computer, Hub, Router, Switch
-from network_components.device_utils import DuplexCable, Frame, IPAddress, IPPacket, MacAddress, Port, Subnetwork
+from network_components.device_utils import DuplexCable, Frame, IPAddress, IPPacket, MacAddress, Port, Subnetwork, SubnetworkMask
 
 
 class Instruction(ABC):
@@ -70,7 +70,7 @@ class IP(Instruction):
             device = simulator.routers[args[2]]
         
         ip_address = IPAddress(args[3])
-        mask_address = MacAddress(args[4])
+        mask_address = SubnetworkMask(args[4])
         device.ip_mask_addresses[ip_address.address] = (ip_address, mask_address)
         
         subnetwork_address = device.subnetwork_address()
@@ -81,6 +81,7 @@ class IP(Instruction):
             simulator.subnetworks[subnetwork_address] = subnetwork
         
         subnetwork.devices[device.name] = device
+        simulator.ip_dictionary[ip_address.address] = device
             
 class SendFrame(Instruction):
     
@@ -212,14 +213,14 @@ class SendPacket(Instruction):
         ip_packet = IPPacket(target_ip, source_ip, payload_size, payload_data)
         
         destination_mac = ""
-        if not host.contains_ip(host.routes_table, target_ip): # implementar método contains ip que devuelve si está en la tabla de rutas la ruta con ese ip
+        if not host.contains_ip(target_ip):
             arp = ARP()
             destination_mac = arp.execute(simulator, host.mac_addresses[host.first_key], target_ip)
         else : 
-            destination_host = simulator.ip_dictionary[target_ip] # agregar a simulator un diccionario de ip que tenga como valores las computadoras a las que pertenece ese ip
+            destination_host = simulator.ip_dictionary[target_ip]
             destination_mac = destination_host.mac_addresses[destination_host.first_key]
         
-        device_with_ip = host.routing(ip_packet)
+        device_with_ip = host.routing(ip_packet, simulator)
         
         if device_with_ip is not None:
             icmp = ICMP()

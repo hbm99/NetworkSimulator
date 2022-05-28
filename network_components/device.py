@@ -1,6 +1,10 @@
 
 from abc import abstractmethod
+
+from sympy import false
+from instructions.protocol import ICMP
 from network_components.device_utils import Port, Route
+from time import time
 
 
 class Device:
@@ -30,9 +34,11 @@ class IPDevice:
         self.first_key = next(iter(self.ip_mask_addresses))
         
     #Returns the IPDevice subnetwork
-    def subnetwork_address(self):
-        bin_ip = bin(self.ip_mask_addresses[self.first_key][0].address)
-        bin_mask = bin(self.ip_mask_addresses[self.first_key][1].address)
+    def subnetwork_address(self, ip =  ""):
+        if ip == "":
+            ip = self.first_key
+        bin_ip = bin(self.ip_mask_addresses[ip][0].address)
+        bin_mask = bin(self.ip_mask_addresses[ip][1].address)
         return bin_ip & bin_mask
     
     #Verifies if IPDevice belongs to the subnetwork
@@ -61,12 +67,20 @@ class RoutesTableDevice:
     def insert_route(self, route : Route):
         self.routes_table(route)
         self.routes_table.sort(self.instructions, key = self.get_1s)
+    
     @abstractmethod
     def routing(self, ip_packet):
         pass
         
-    def get_1s(route : Route):
+    def get_1s(self, route : Route):
         return route.route_mask.count("1")
+    
+    def contains_ip(self, ip : str):
+        for route in self.routes_table:
+            if route.target_ip == ip:
+                return True
+        return False
+        
             
 class Computer(Device, IPDevice, RoutesTableDevice):
     def __init__(self, name, ports_count):
@@ -102,16 +116,45 @@ class Computer(Device, IPDevice, RoutesTableDevice):
                 error_signal += "\n"
             f.write(str(time) + " " + hex(int(mac_address, 2)) + " " + data + " " + error_signal)
     
-    def write_payload_txt(self, name, time, ip, data):
+    def write_payload_txt(self, name, time, ip, data, protocol_icmp = 0):
+        
+        control_message = ""
+        if protocol_icmp == 1:
+            icmp = ICMP()
+            control_message = icmp.control_message[int(data, 2)]
+        
         with open('devices_txt//' + name + '_payload.txt', 'a') as f:
             i = 8
             f.write(str(time) + " " + int(ip[0 : i], 2) + "." + int(ip[i : 2 * i], 2) + "." 
                     + int(ip[2 * i : 3 * i], 2) + "." + int(ip[3 * i : 4 * i], 2) + "." + " " 
-                    + data + "\n")
+                    + data + control_message + "\n")
             
-    def routing(self, ip_packet):
-        # nos quedamos aquí
-        return
+    def routing(self, ip_packet, simulator = None):
+        
+        # writting payload txt
+        self.write_payload_txt(self.name, int(time() - simulator.start), ip_packet.source_ip, 
+                               ip_packet.payload_data, int(ip_packet.protocol[-1]))
+        
+        # stop case, when goal is reached 
+        if self.ip_mask_addresses.__contains__(ip_packet.target_ip): 
+            target_device = simulator.ip_dictionary[ip_packet.target_ip]
+            target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
+                                             ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))
+            return None
+        
+        # searching if target device is at a subnetwork from the sending host
+        for ip_mask in self.ip_mask_addresses.values():
+            current_subnetwork = self.subnetwork_address(ip_mask[0])
+            target_device : Computer = simulator.ip_dictionary[ip_packet.target_ip]
+            if current_subnetwork == target_device.subnetwork_address(ip_packet.target_ip):
+                target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
+                                                ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))
+                return None
+        gateway_ip = self.subnetwork_address()[:-1] + "1"
+        gateway_device : RoutesTableDevice = simulator.ip_dictionary[gateway_ip]
+        gateway_device.routing(ip_packet, simulator)
+        
+        
             
 
 class Hub(Device):
@@ -132,10 +175,7 @@ class Router(Device, IPDevice, RoutesTableDevice):
         RoutesTableDevice.__init__(self)
         self.ports = self.create_ports(name, int(ports_count))
         
-    def routing(self, ip_packet):
-        
-        # if self.ip_mask_addresses.__contains__(ip_packet.target_ip): # este caso no debe ocurrir aquí porque debe terminar en un host, no en un router
-        #     return None
+    def routing(self, ip_packet, simulator = None):
         
         for route in self.routes_table:
             and_target_ip_route_mask = bin(int(ip_packet.target_ip, 2)) & bin(int(route.route_mask, 2))
@@ -155,8 +195,8 @@ class Router(Device, IPDevice, RoutesTableDevice):
                 
                 if destination_port.device is IPDevice:
                     ip_packet.target_ip = route.gateway_ip
-                    ip_packet.source_ip = destination_port.device
-                    destination_port.device.routing(ip_packet)
+                    # ip_packet.source_ip = destination_port.device
+                    destination_port.device.routing(ip_packet, simulator)
                     return None
         
         return self

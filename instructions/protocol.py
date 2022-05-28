@@ -1,6 +1,7 @@
 
 from abc import ABC, abstractmethod
 from time import time
+from typing import Dict
 from network_components.device_utils import Frame, IPPacket
 
 
@@ -51,5 +52,8 @@ class ARP(Protocol):
         return mac_from_target_ip
     
 class ICMP(Protocol):
+    def __init__(self):
+        self.control_message = {0 : "echo reply", 3 : "destination host unreachable", 8 : "echo request", 11 : "time exceeded"}
+    
     def execute(self, simulator, destination_ip, source_ip, payload_data, ttl = "0" * 8):
         return IPPacket(destination_ip, source_ip, "0" * 7 + "1", payload_data, ttl, "0" * 7 + "1")
