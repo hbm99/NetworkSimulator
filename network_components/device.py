@@ -31,15 +31,15 @@ class Device:
 class IPDevice:
     def __init__(self):
         self.ip_mask_addresses = {}
-        self.first_key = next(iter(self.ip_mask_addresses))
+        self.first_key = None # next(iter(self.ip_mask_addresses))
         
     #Returns the IPDevice subnetwork
     def subnetwork_address(self, ip =  ""):
         if ip == "":
             ip = self.first_key
-        bin_ip = bin(self.ip_mask_addresses[ip][0].address)
-        bin_mask = bin(self.ip_mask_addresses[ip][1].address)
-        return bin_ip & bin_mask
+        # bin_ip = bin(int(self.ip_mask_addresses[ip][0].address[2:], 2))
+        # bin_mask = bin(int(self.ip_mask_addresses[ip][1].address[2:], 2))
+        return bin(int(self.ip_mask_addresses[ip][0].address, 2) & int(self.ip_mask_addresses[ip][1].address, 2))[2:]
     
     #Verifies if IPDevice belongs to the subnetwork
     def is_subnetwork_address(self, possible_subnetwork):
@@ -57,9 +57,11 @@ class IPDevice:
         broadcast_address = [0] * 32
         for i in range(index_subnetwork, len(broadcast_address), 1):
             broadcast_address[i] = 1
-        for i in range(broadcast_address):
-            broadcast_address[i] = int(self.ip_mask_addresses[self.first_key][0].address) | broadcast_address[i]
-        return bin(str(broadcast_address))
+        # for i in range(broadcast_address):
+        #     broadcast_address[i] = int(self.ip_mask_addresses[self.first_key][0].address) | broadcast_address[i]
+        broadcast_address = ''.join(broadcast_address)
+        broadcast_address = bin(int(self.ip_mask_addresses[self.first_key][0].address, 2) | int(broadcast_address, 2))
+        return broadcast_address
     
 class RoutesTableDevice:
     def __init__(self):
@@ -90,12 +92,15 @@ class Computer(Device, IPDevice, RoutesTableDevice):
         RoutesTableDevice.__init__(self)
         self.ports = self.create_ports(name, ports_count)
         self.mac_addresses = {}
+        self.mac_address = None
         self.txt = self.create_data_txt(self.name)
         self.payload_txt = self.create_payload_txt(self.name)
         self.fill_routes_table(ports_count)
     
     
     def fill_routes_table(self, ports_count):
+        if len(self.ip_mask_addresses) == 0:
+            return
         subnetwork_address = self.subnetwork_address()
         subnetwork_route = Route(subnetwork_address, self.ip_mask_addresses[next(iter(self.ip_mask_addresses))], "0" * 32, ports_count)
         self.insert_route(subnetwork_route)

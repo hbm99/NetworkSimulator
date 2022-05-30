@@ -78,6 +78,13 @@ class Simulator:
                 for port in switch_value.ports:
                     if port.name == name:
                         return port
+        
+        for router_value in self.routers.values():
+            if splitted_name == router_value.name:
+                for port in router_value.ports:
+                    if port.name == name:
+                        return port
+        
             
 
     def run(self):

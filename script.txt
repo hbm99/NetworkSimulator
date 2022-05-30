@@ -1,14 +1,14 @@
 0 create host julia
 0 create host pedro
 0 create host francisco
-0 create switch switchcito 4
-0 create hub hubcito 4
-1 mac pedro A5B4
-1 mac julia A4B5
-1 mac francisco FBFA
-2 connect pedro_1 switchcito_1
-2 connect hubcito_1 switchcito_2
-2 connect hubcito_2 julia_1
-2 connect hubcito_3 francisco_1
-3 send_frame pedro FFFF AAAAAAAAAAAAAAAA
-3 send_frame julia A5B4 BBBBBBBBBBBBBBBB
+0 create router routercito 4
+1 connect julia_1 routercito_1
+1 connect pedro_1 routercito_2
+1 connect francisco_1 routercito_3
+2 ip julia 192.168.1.20 255.255.255.0
+2 mac julia 1345
+2 ip pedro 192.168.1.21 255.255.255.0
+2 mac pedro A5B4
+2 ip francisco 192.168.1.22 255.255.255.0
+2 mac francisco B45F
+3 send_packet julia 192.168.1.22 ABAB

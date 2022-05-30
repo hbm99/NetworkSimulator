@@ -61,6 +61,8 @@ class Mac(Instruction):
         mac_address = MacAddress(args[3])
         name_interface = args[2].split(':')
         simulator.computers[name_interface[0]].mac_addresses[args[3]] = mac_address
+        if len(simulator.computers[name_interface[0]].mac_addresses) == 1:
+            simulator.computers[name_interface[0]].mac_address = mac_address
         
 class IP(Instruction):
     
@@ -72,19 +74,37 @@ class IP(Instruction):
         if device is None:
             device = simulator.routers[name]
         
-        ip_address = IPAddress(args[3])
-        mask_address = SubnetworkMask(args[4])
+        bin_ip = self.get_bin_str(args[3])
+        ip_address = IPAddress(bin_ip)
+        
+        bin_mask = self.get_bin_str(args[4])
+        mask_address = SubnetworkMask(bin_mask)
+        
         device.ip_mask_addresses[ip_address.address] = (ip_address, mask_address)
         
-        subnetwork_address = device.subnetwork_address()
-        subnetwork = simulator.subnetworks[subnetwork_address]
+        if len(device.ip_mask_addresses) == 1:
+            device.first_key = next(iter(device.ip_mask_addresses))
         
-        if subnetwork is None:
+        subnetwork_address = device.subnetwork_address()
+        
+        subnetwork = None
+        if not simulator.subnetworks.keys().__contains__(subnetwork_address):
             subnetwork = Subnetwork(subnetwork_address)
             simulator.subnetworks[subnetwork_address] = subnetwork
+        else :
+            subnetwork = simulator.subnetworks[subnetwork_address]
         
         subnetwork.devices[device.name] = device
         simulator.ip_dictionary[ip_address.address] = device
+        
+    def get_bin_str(self, regular_address : str):
+        address_parts = regular_address.split('.')
+        bin_address_parts = []
+        for part in address_parts:
+            bin_address_parts.append(str(bin(int(part))[2:].zfill(8)))
+        return ''.join(bin_address_parts)
+        
+        
             
 class SendFrame(Instruction):
     
@@ -297,13 +317,4 @@ class RouteDelete(Instruction):
         for route in router.routes_table:
             if args[4] == route.target_ip and args[5] == route.route_mask and args[6] == route.gateway_ip and args[7] == route.interface:
                 router.routes_table.remove(route)
-    
-        
-        
-            
-            
-        
-        
-        
-            
         
