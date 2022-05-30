@@ -16,7 +16,7 @@ class ARP(Protocol):
     def execute(self, simulator, source_mac : str, target_ip : str):
         
         target_mac = bin(int("FFFF", 16))[2:].zfill(16)
-        source_mac = bin(int(source_mac))[2:].zfill(16)
+        source_mac = bin(int(source_mac.address))[2:].zfill(16)
         data_size = bin(8)[2:].zfill(8)
         data = ''.join(format(ord(x), 'b') for x in "ARPQ") + target_ip
         v_data = ""
@@ -37,7 +37,7 @@ class ARP(Protocol):
         
         return mac_from_target_ip
         
-    def send_special_frame(frame : Frame, simulator):
+    def send_special_frame(self, frame : Frame, simulator):
         
         target_ip = frame.data[32:]
         mac_from_target_ip = ""
@@ -45,7 +45,7 @@ class ARP(Protocol):
         for computer_value in simulator.computers.values():
             if computer_value.mac_addresses.__contains__(frame.target_mac) or frame.target_mac == "1" * 32:
                 computer_value.write_payload_txt(computer_value.name, int(time() - simulator.start), target_ip, frame.data)
-            for ip_mask in computer_value.ip_mask_addresses:
+            for ip_mask in computer_value.ip_mask_addresses.values():
                 if ip_mask[0].address == target_ip:
                     mac_from_target_ip = computer_value.mac_addresses[next(iter(computer_value.mac_addresses))]
     

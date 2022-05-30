@@ -27,18 +27,23 @@ class Device:
     def find_port(port_name : str):
         # a implementar, ver llamado en routing de router
         return
+    # def get_bin_str(self, regular_address : str):
+    #     address_parts = regular_address.split('.')
+    #     bin_address_parts = []
+    #     for part in address_parts:
+    #         bin_address_parts.append(str(bin(int(part))[2:].zfill(8)))
+    #     return ''.join(bin_address_parts)
             
 class IPDevice:
     def __init__(self):
         self.ip_mask_addresses = {}
-        self.first_key = None # next(iter(self.ip_mask_addresses))
+        self.first_key_ip_mask_addresses = None
+        self.first_key_mac_addresses = None
         
     #Returns the IPDevice subnetwork
     def subnetwork_address(self, ip =  ""):
         if ip == "":
-            ip = self.first_key
-        # bin_ip = bin(int(self.ip_mask_addresses[ip][0].address[2:], 2))
-        # bin_mask = bin(int(self.ip_mask_addresses[ip][1].address[2:], 2))
+            ip = self.first_key_ip_mask_addresses
         return bin(int(self.ip_mask_addresses[ip][0].address, 2) & int(self.ip_mask_addresses[ip][1].address, 2))[2:]
     
     #Verifies if IPDevice belongs to the subnetwork
@@ -49,7 +54,7 @@ class IPDevice:
     def broadcast_address(self):
         
         index_subnetwork = 0
-        mask = self.ip_mask_addresses[self.first_key][1].address
+        mask = self.ip_mask_addresses[self.first_key_ip_mask_addresses][1].address
         for i in range(len(mask) - 1, -1, -1):
             if mask[i] != '0':
                 index_subnetwork = i
@@ -57,10 +62,9 @@ class IPDevice:
         broadcast_address = [0] * 32
         for i in range(index_subnetwork, len(broadcast_address), 1):
             broadcast_address[i] = 1
-        # for i in range(broadcast_address):
-        #     broadcast_address[i] = int(self.ip_mask_addresses[self.first_key][0].address) | broadcast_address[i]
+        
         broadcast_address = ''.join(broadcast_address)
-        broadcast_address = bin(int(self.ip_mask_addresses[self.first_key][0].address, 2) | int(broadcast_address, 2))
+        broadcast_address = bin(int(self.ip_mask_addresses[self.first_key_ip_mask_addresses][0].address, 2) | int(broadcast_address, 2))
         return broadcast_address
     
 class RoutesTableDevice:
@@ -131,9 +135,9 @@ class Computer(Device, IPDevice, RoutesTableDevice):
         
         with open('devices_txt//' + name + '_payload.txt', 'a') as f:
             i = 8
-            f.write(str(time) + " " + int(ip[0 : i], 2) + "." + int(ip[i : 2 * i], 2) + "." 
-                    + int(ip[2 * i : 3 * i], 2) + "." + int(ip[3 * i : 4 * i], 2) + "." + " " 
-                    + data + control_message + "\n")
+            f.write(str(time) + " " + str(int(ip.address[0 : i], 2)) + "." + str(int(ip.address[i : 2 * i], 2)) + "." 
+                    + str(int(ip.address[2 * i : 3 * i], 2)) + "." + str(int(ip.address[3 * i : 4 * i], 2)) + " " 
+                    + hex(int(data, 2)) + control_message + "\n")
             
     def routing(self, ip_packet, simulator = None):
         
@@ -158,8 +162,8 @@ class Computer(Device, IPDevice, RoutesTableDevice):
         
         # searching if target device is at a subnetwork from the sending host
         for ip_mask in self.ip_mask_addresses.values():
-            current_subnetwork = self.subnetwork_address(ip_mask[0])
-            target_device : Computer = simulator.ip_dictionary[ip_packet.target_ip]
+            current_subnetwork = self.subnetwork_address(ip_mask[0].address)
+            target_device : Computer = simulator.ip_dictionary[ip_packet.target_ip] ################
             if current_subnetwork == target_device.subnetwork_address(ip_packet.target_ip):
                 target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
                                                 ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))

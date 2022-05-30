@@ -54,8 +54,8 @@ class Route:
         self.interface = interface
 
 class IPPacket:
-    def __init__(self, destination_ip, source_ip, payload_size, payload_data, time_to_live = "0" * 8, protocol = "0" * 8):
-        self.target_ip = destination_ip
+    def __init__(self, target_ip, source_ip, payload_size, payload_data, time_to_live = "0" * 8, protocol = "0" * 8):
+        self.target_ip = target_ip
         self.source_ip = source_ip
         self.ttl = time_to_live
         self.payload_size = payload_size

@@ -58,11 +58,14 @@ class Disconnect(Instruction):
 class Mac(Instruction):
     
     def execute(self, simulator, args):
-        mac_address = MacAddress(args[3])
+        address = bin(int(args[3], 16))[2:]
+        mac_address = MacAddress(address)
         name_interface = args[2].split(':')
-        simulator.computers[name_interface[0]].mac_addresses[args[3]] = mac_address
-        if len(simulator.computers[name_interface[0]].mac_addresses) == 1:
-            simulator.computers[name_interface[0]].mac_address = mac_address
+        device = simulator.computers[name_interface[0]]
+        device.mac_addresses[address] = mac_address
+        if len(device.mac_addresses) == 1:
+            device.mac_address = mac_address
+            device.first_key_mac_addresses = next(iter(device.mac_addresses))
         
 class IP(Instruction):
     
@@ -74,16 +77,16 @@ class IP(Instruction):
         if device is None:
             device = simulator.routers[name]
         
-        bin_ip = self.get_bin_str(args[3])
+        bin_ip = simulator.get_bin_str(args[3])
         ip_address = IPAddress(bin_ip)
         
-        bin_mask = self.get_bin_str(args[4])
+        bin_mask = simulator.get_bin_str(args[4])
         mask_address = SubnetworkMask(bin_mask)
         
         device.ip_mask_addresses[ip_address.address] = (ip_address, mask_address)
         
         if len(device.ip_mask_addresses) == 1:
-            device.first_key = next(iter(device.ip_mask_addresses))
+            device.first_key_ip_mask_addresses = next(iter(device.ip_mask_addresses))
         
         subnetwork_address = device.subnetwork_address()
         
@@ -96,16 +99,7 @@ class IP(Instruction):
         
         subnetwork.devices[device.name] = device
         simulator.ip_dictionary[ip_address.address] = device
-        
-    def get_bin_str(self, regular_address : str):
-        address_parts = regular_address.split('.')
-        bin_address_parts = []
-        for part in address_parts:
-            bin_address_parts.append(str(bin(int(part))[2:].zfill(8)))
-        return ''.join(bin_address_parts)
-        
-        
-            
+         
 class SendFrame(Instruction):
     
     def execute(self, simulator, args):
@@ -227,8 +221,8 @@ class SendPacket(Instruction):
     def execute(self, simulator, args):
         
         host = simulator.computers[args[2]]
-        source_ip = host.ip_mask_addresses[host.first_key][0]
-        target_ip = args[3]
+        source_ip = host.ip_mask_addresses[host.first_key_ip_mask_addresses][0]
+        target_ip = simulator.get_bin_str(args[3])
         
         payload_size = bin(int(len(args[4])/4))[2:].zfill(8)
         payload_data = bin(int(args[4], 16))[2:].zfill(len(args[4]) * 4)
@@ -236,7 +230,6 @@ class SendPacket(Instruction):
         ip_packet = IPPacket(target_ip, source_ip, payload_size, payload_data)
         
         self.send(simulator, ip_packet, host)
-        
         
     
     def send(self, simulator, ip_packet, host):
@@ -248,30 +241,24 @@ class SendPacket(Instruction):
         
         if not host.contains_ip(target_ip):
             arp = ARP()
-            destination_mac = arp.execute(simulator, host.mac_addresses[host.first_key], target_ip)
+            destination_mac = arp.execute(simulator, host.mac_addresses[host.first_key_mac_addresses], target_ip)
         else : 
             destination_host = simulator.ip_dictionary[target_ip]
-            destination_mac = destination_host.mac_addresses[destination_host.first_key]
+            destination_mac = destination_host.mac_addresses[destination_host.first_key_mac_addresses]
         
         device_with_ip = host.routing(ip_packet, simulator)
         
         #device from router routing
         if device_with_ip[0] is not None:
             icmp = ICMP()
-            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key][0], bin(3)[2:].zfill(8))
-            
-            """ new_send_packet_args = [0, "send_packet", device_with_ip[0].name, source_ip, icmp_packet.payload_data]
-            self.execute(simulator, new_send_packet_args) """
+            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key_ip_mask_addresses][0], bin(3)[2:].zfill(8))
             
             self.send(simulator, icmp_packet, device_with_ip[0].name)
         
         #device from host routing
         if device_with_ip[1] is not None:
             icmp = ICMP()
-            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key][0], bin(0)[2:].zfill(8))
-            
-            """ new_send_packet_args = [0, "send_packet", device_with_ip[1].name, source_ip, icmp_packet.payload_data]
-            self.execute(simulator, new_send_packet_args) """
+            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key_ip_mask_addresses][0], bin(0)[2:].zfill(8))
             
             self.send(simulator, icmp_packet, device_with_ip[1].name)
             
@@ -280,7 +267,7 @@ class Ping(Instruction):
     def execute(self, simulator, args):
         icmp = ICMP()
         host = simulator.computers[args[2]]
-        ping_icmp_packet = icmp.execute(simulator, args[3], host.ip_mask_addresses[host.first_key][0], "00001000")
+        ping_icmp_packet = icmp.execute(simulator, args[3], host.ip_mask_addresses[host.first_key_ip_mask_addresses][0], "00001000")
         send_packet = SendPacket() 
         for i in range(4):
             initial_time = time()

@@ -84,9 +84,14 @@ class Simulator:
                 for port in router_value.ports:
                     if port.name == name:
                         return port
+                    
+    def get_bin_str(self, regular_address : str):
+        address_parts = regular_address.split('.')
+        bin_address_parts = []
+        for part in address_parts:
+            bin_address_parts.append(str(bin(int(part))[2:].zfill(8)))
+        return ''.join(bin_address_parts)
         
-            
-
     def run(self):
         cwd = getcwd()
         txt_files = glob(cwd + '//devices_txt/' + '/*.txt')
