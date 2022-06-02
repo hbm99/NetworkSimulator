@@ -1,7 +1,6 @@
 
 from abc import abstractmethod
 
-from sympy import false
 from instructions.protocol import ICMP
 from network_components.device_utils import Port, Route
 from time import time
@@ -24,16 +23,13 @@ class Device:
     def write_txt(self, time : int, port, operation : str, data : str, operation_status : str):
         with open('devices_txt//' + port.device.name + '.txt', 'a') as f:
             f.write(str(time) + " " + port.name + " " + operation + " " + data + " " + operation_status + "\n")
-    def find_port(port_name : str):
-        # a implementar, ver llamado en routing de router
-        return
-    # def get_bin_str(self, regular_address : str):
-    #     address_parts = regular_address.split('.')
-    #     bin_address_parts = []
-    #     for part in address_parts:
-    #         bin_address_parts.append(str(bin(int(part))[2:].zfill(8)))
-    #     return ''.join(bin_address_parts)
-            
+    
+    def find_port(self, port_name : str):
+        for port in self.ports:
+            if port.name == port_name:
+                return port
+        return None
+
 class IPDevice:
     def __init__(self):
         self.ip_mask_addresses = {}
@@ -41,10 +37,10 @@ class IPDevice:
         self.first_key_mac_addresses = None
         
     #Returns the IPDevice subnetwork
-    def subnetwork_address(self, ip =  ""):
-        if ip == "":
-            ip = self.first_key_ip_mask_addresses
-        return bin(int(self.ip_mask_addresses[ip][0].address, 2) & int(self.ip_mask_addresses[ip][1].address, 2))[2:]
+    def subnetwork_address(self, ip =  None):
+        if ip is None:
+            ip = self.ip_mask_addresses[self.first_key_ip_mask_addresses][0]
+        return bin(int(ip.address, 2) & int(self.ip_mask_addresses[ip.address][1].address, 2))[2:].zfill(32)
     
     #Verifies if IPDevice belongs to the subnetwork
     def is_subnetwork_address(self, possible_subnetwork):
@@ -163,13 +159,17 @@ class Computer(Device, IPDevice, RoutesTableDevice):
         
         # searching if target device is at a subnetwork from the sending host
         for ip_mask in self.ip_mask_addresses.values():
-            current_subnetwork = self.subnetwork_address(ip_mask[0].address)
-            target_device : Computer = simulator.ip_dictionary[ip_packet.target_ip] ################
+            current_subnetwork = self.subnetwork_address(ip_mask[0])
+            target_device : Computer = simulator.ip_dictionary[ip_packet.target_ip.address]
             if current_subnetwork == target_device.subnetwork_address(ip_packet.target_ip):
                 target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
                                                 ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))
                 return None, None
         gateway_ip = self.subnetwork_address()[:-1] + "1"
+        
+        if gateway_ip not in simulator.ip_dictionary:
+            return self, None
+        
         gateway_device : RoutesTableDevice = simulator.ip_dictionary[gateway_ip]
         gateway_device.routing(ip_packet, simulator)
         
@@ -197,10 +197,10 @@ class Router(Device, IPDevice, RoutesTableDevice):
     def routing(self, ip_packet, simulator = None):
         
         for route in self.routes_table:
-            and_target_ip_route_mask = bin(int(ip_packet.target_ip, 2)) & bin(int(route.route_mask, 2))
+            and_target_ip_route_mask = bin(int(ip_packet.target_ip, 2)) & bin(int(route.route_mask, 2))[2:].zfill(32)
             if str(and_target_ip_route_mask) == route.target_ip:
                 
-                sending_port : Port = self.find_port(self.name + "_" + str(route.interface)) # implementar método que a partir del nombre devuelve el puerto
+                sending_port : Port = self.find_port(self.name + "_" + str(route.interface))
                 
                 current_cable = sending_port.cable
                 

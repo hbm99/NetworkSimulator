@@ -223,6 +223,7 @@ class SendPacket(Instruction):
         host = simulator.computers[args[2]]
         source_ip = host.ip_mask_addresses[host.first_key_ip_mask_addresses][0]
         target_ip = simulator.get_bin_str(args[3])
+        target_ip = simulator.ip_dictionary[target_ip].ip_mask_addresses[target_ip][0]
         
         payload_size = bin(int(len(args[4])/2))[2:].zfill(8)
         payload_data = bin(int(args[4], 16))[2:].zfill(len(args[4]) * 4)
@@ -251,16 +252,16 @@ class SendPacket(Instruction):
         #device from router routing
         if device_with_ip[0] is not None:
             icmp = ICMP()
-            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key_ip_mask_addresses][0], bin(3)[2:].zfill(8))
+            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip[0].ip_mask_addresses[device_with_ip[0].first_key_ip_mask_addresses][0], bin(3)[2:].zfill(8))
             
-            self.send(simulator, icmp_packet, device_with_ip[0].name)
+            self.send(simulator, icmp_packet, device_with_ip[0])
         
         #device from host routing
         if device_with_ip[1] is not None:
             icmp = ICMP()
-            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip.ip_mask_addresses[device_with_ip.first_key_ip_mask_addresses][0], bin(0)[2:].zfill(8))
+            icmp_packet = icmp.execute(simulator, source_ip, device_with_ip[1].ip_mask_addresses[device_with_ip[1].first_key_ip_mask_addresses][0], bin(0)[2:].zfill(8))
             
-            self.send(simulator, icmp_packet, device_with_ip[1].name)
+            self.send(simulator, icmp_packet, device_with_ip[1])
             
 class Ping(Instruction):
     

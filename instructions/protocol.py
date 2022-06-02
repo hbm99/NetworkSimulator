@@ -18,7 +18,7 @@ class ARP(Protocol):
         target_mac = bin(int("FFFF", 16))[2:].zfill(16)
         source_mac = bin(int(source_mac.address))[2:].zfill(16)
         data_size = bin(8)[2:].zfill(8)
-        data = ''.join(format(ord(x), 'b') for x in "ARPQ") + target_ip
+        data = ''.join(format(ord(x), 'b') for x in "ARPQ") + target_ip.address
         v_data = ""
         v_data_size = bin(int(len(v_data)))[2:].zfill(8)
         
@@ -29,7 +29,7 @@ class ARP(Protocol):
         target_mac = source_mac
         source_mac = mac_from_target_ip
         
-        data = ''.join(format(ord(x), 'b') for x in "ARPR") + target_ip
+        data = ''.join(format(ord(x), 'b') for x in "ARPR") + target_ip.address
         
         response_frame = Frame(target_mac, source_mac, data_size, v_data_size, data, v_data)
         
