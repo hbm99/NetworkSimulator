@@ -224,7 +224,7 @@ class SendPacket(Instruction):
         source_ip = host.ip_mask_addresses[host.first_key_ip_mask_addresses][0]
         target_ip = simulator.get_bin_str(args[3])
         
-        payload_size = bin(int(len(args[4])/4))[2:].zfill(8)
+        payload_size = bin(int(len(args[4])/2))[2:].zfill(8)
         payload_data = bin(int(args[4], 16))[2:].zfill(len(args[4]) * 4)
         
         ip_packet = IPPacket(target_ip, source_ip, payload_size, payload_data)

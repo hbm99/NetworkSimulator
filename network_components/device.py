@@ -142,8 +142,9 @@ class Computer(Device, IPDevice, RoutesTableDevice):
     def routing(self, ip_packet, simulator = None):
         
         # writting payload txt
-        self.write_payload_txt(self.name, int(time() - simulator.start), ip_packet.source_ip, 
-                               ip_packet.payload_data, int(ip_packet.protocol[-1]))
+        if self.ip_mask_addresses[self.first_key_ip_mask_addresses][0].address == ip_packet.source_ip: 
+            self.write_payload_txt(self.name, int(time() - simulator.start), ip_packet.source_ip, 
+                                ip_packet.payload_data, int(ip_packet.protocol[-1]))
         
         # Verify if payload from icmp is ping
         if ip_packet.protocol == "00000001":
