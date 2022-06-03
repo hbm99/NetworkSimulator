@@ -133,12 +133,12 @@ class Computer(Device, IPDevice, RoutesTableDevice):
             i = 8
             f.write(str(time) + " " + str(int(ip.address[0 : i], 2)) + "." + str(int(ip.address[i : 2 * i], 2)) + "." 
                     + str(int(ip.address[2 * i : 3 * i], 2)) + "." + str(int(ip.address[3 * i : 4 * i], 2)) + " " 
-                    + hex(int(data, 2)) + control_message + "\n")
+                    + hex(int(data, 2)) + " " + control_message + "\n")
             
     def routing(self, ip_packet, simulator = None):
         
         # writting payload txt
-        if self.ip_mask_addresses[self.first_key_ip_mask_addresses][0].address == ip_packet.source_ip: 
+        if self.ip_mask_addresses[self.first_key_ip_mask_addresses][0].address == ip_packet.source_ip or ip_packet.source_ip == ip_packet.target_ip: 
             self.write_payload_txt(self.name, int(time() - simulator.start), ip_packet.source_ip, 
                                 ip_packet.payload_data, int(ip_packet.protocol[-1]))
         
