@@ -2,7 +2,7 @@ from glob import glob
 from time import time
 from os import getcwd, remove
 from bug_catcher.bug_catcher import VerificationSum
-from instructions.instruction import IP, Connect, Create, Disconnect, Mac, Ping, Route, Send, SendFrame, SendPacket
+from instructions.instruction import IP, Connect, Create, Disconnect, Mac, Ping, RouteInstruction, Send, SendFrame, SendPacket
 from operator import itemgetter
 
 class Simulator:
@@ -10,7 +10,7 @@ class Simulator:
     def __init__(self):
         self.instruction_type = {"connect" : Connect(), "create" : Create(), "disconnect" : Disconnect(), 
                                  "send" : Send(), "mac" : Mac(), "send_frame" : SendFrame(), "ip" : IP(), 
-                                 "send_packet" : SendPacket(), "ping" : Ping(), "route" : Route()}
+                                 "send_packet" : SendPacket(), "ping" : Ping(), "route" : RouteInstruction()}
         
         self.bug_catcher_type = {"sum" : VerificationSum()}
         self.bug_catcher = self.bug_catcher_type[self.read_bug_catcher()]

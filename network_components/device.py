@@ -68,8 +68,8 @@ class RoutesTableDevice:
         self.routes_table = []
     
     def insert_route(self, route : Route):
-        self.routes_table(route)
-        self.routes_table.sort(self.instructions, key = self.get_1s)
+        self.routes_table.append(route)
+        self.routes_table.sort(key = self.get_1s)
     
     @abstractmethod
     def routing(self, ip_packet):
@@ -140,7 +140,7 @@ class Computer(Device, IPDevice, RoutesTableDevice):
         # writting payload txt
         if self.ip_mask_addresses[self.first_key_ip_mask_addresses][0].address == ip_packet.source_ip or ip_packet.source_ip == ip_packet.target_ip: 
             self.write_payload_txt(self.name, int(time() - simulator.start), ip_packet.source_ip, 
-                                ip_packet.payload_data, int(ip_packet.protocol[-1]))
+                                   ip_packet.payload_data, int(ip_packet.protocol[-1]))
         
         # Verify if payload from icmp is ping
         if ip_packet.protocol == "00000001":
@@ -197,8 +197,11 @@ class Router(Device, IPDevice, RoutesTableDevice):
     def routing(self, ip_packet, simulator = None):
         
         for route in self.routes_table:
-            and_target_ip_route_mask = bin(int(ip_packet.target_ip, 2)) & bin(int(route.route_mask, 2))[2:].zfill(32)
-            if str(and_target_ip_route_mask) == route.target_ip:
+            
+            and_target_ip_route_mask = bin(int(ip_packet.target_ip.address, 2) & int(route.route_mask, 2))[2:].zfill(32)
+            target_device = simulator.ip_dictionary[route.target_ip]
+            
+            if and_target_ip_route_mask == route.target_ip:
                 
                 sending_port : Port = self.find_port(self.name + "_" + str(route.interface))
                 
@@ -217,6 +220,10 @@ class Router(Device, IPDevice, RoutesTableDevice):
                     # ip_packet.source_ip = destination_port.device
                     destination_port.device.routing(ip_packet, simulator)
                     return None, None
+            
+            elif and_target_ip_route_mask == target_device.subnetwork_address():
+                target_device.write_payload_txt(target_device.name, int(time() - simulator.start), 
+                                                ip_packet.source_ip, ip_packet.payload_data, int(ip_packet.protocol[-1]))
         
         return self, None
         

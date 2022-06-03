@@ -3,7 +3,7 @@ from time import time, sleep
 
 from instructions.protocol import ARP, ICMP
 from network_components.device import Computer, Hub, Router, Switch
-from network_components.device_utils import DuplexCable, Frame, IPAddress, IPPacket, MacAddress, Port, Subnetwork, SubnetworkMask
+from network_components.device_utils import DuplexCable, Frame, IPAddress, IPPacket, MacAddress, Port, Route, Subnetwork, SubnetworkMask
 
 
 class Instruction(ABC):
@@ -73,8 +73,9 @@ class IP(Instruction):
         
         name_interface = args[2].split(':')
         name = name_interface[0]
-        device = simulator.computers[name]
-        if device is None:
+        if name in simulator.computers:
+            device = simulator.computers[name]
+        else:
             device = simulator.routers[name]
         
         bin_ip = simulator.get_bin_str(args[3])
@@ -249,6 +250,9 @@ class SendPacket(Instruction):
         
         device_with_ip = host.routing(ip_packet, simulator)
         
+        if device_with_ip is None:
+            return
+        
         #device from router routing
         if device_with_ip[0] is not None:
             icmp = ICMP()
@@ -275,7 +279,7 @@ class Ping(Instruction):
             send_packet.send(simulator, ping_icmp_packet, host)
             sleep(100/1000 - (time() - initial_time))
             
-class Route(Instruction):
+class RouteInstruction(Instruction):
     def __init__(self):
         self.route_instructions = {"reset" : RouteReset(), "add" : RouteAdd(), "delete" : RouteDelete()}
     
@@ -291,7 +295,8 @@ class RouteReset(Instruction):
 class RouteAdd(Instruction):
     
     def execute(self, simulator, args):
-        simulator.routers[args[3]].insert_route(Route(args[4], args[5], args[6], args[7]))
+        simulator.routers[args[3]].insert_route(Route(simulator.get_bin_str(args[4]), simulator.get_bin_str(args[5]), 
+                                                      simulator.get_bin_str(args[6]), args[7]))
         
 class RouteDelete(Instruction):
     
